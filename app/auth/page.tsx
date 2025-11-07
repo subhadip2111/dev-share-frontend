@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Github } from "lucide-react";
+import { Eye, EyeOff, Github } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { loginApi, registerApi } from "@/utils/auth";
 import { useAppDispatch } from "@/lib/hook";
@@ -18,38 +18,40 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 const Auth = () => {
     const dispatch = useAppDispatch();
     const [error, setError] = useState<string | null>(null);
+    const [sucessMessage, setSuccessMessage] = useState<string | null>(null);
     const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem("accessToken"));
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const handleEmailAuth = async (isSignup: boolean) => {
         if (!email || !password || (isSignup && !name)) {
-            toast({
-                title: "Error",
-                description: "Please fill in all fields",
-                variant: "destructive",
-            });
+            setError("Please fill in all fields");
             return;
         }
 
-
+        if ( isSignup && password.length <= 8) {
+            setError("Password must be at least 8 characters long");
+            return;
+        }
+        const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`;
         try {
             if (isSignup) {
-                await registerApi({ name, email, password });
-                toast({
-                    title: "Success",
-                    description: "Account created successfully! Please log in now.",
-                });
+
+                await registerApi({ name, email, password, avatar });
+                setSuccessMessage("Registration successful! Please log in.");
                 router.push("/auth");
             } else {
                 const loginData = await loginApi({ email, password });
+                setSuccessMessage("Login successful!");
                 console.log("loginData:", loginData);
                 localStorage.setItem("accessToken", loginData.tokens.accessToken);
                 const userData = {
                     user: loginData.user,
                     accessToken: loginData.tokens.accessToken,
-                    refreshToken: loginData.tokens.refreshToken
+                    refreshToken: loginData.tokens.refreshToken,
+                    avatar: avatar,
                 }
                 localStorage.setItem("user", JSON.stringify(userData));
                 dispatch(login(userData));
@@ -94,6 +96,14 @@ const Auth = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/20 p-4">
+            {
+                sucessMessage && (
+                    <Alert className="mb-4 w-full max-w-md">
+                        <AlertTitle>{sucessMessage}</AlertTitle>
+                    </Alert>
+                )
+            }
+
             <Card className="w-full max-w-md shadow-lg animate-fade-in">
                 <CardHeader className="space-y-1 text-center">
                     <div className="flex justify-center mb-4">
@@ -105,13 +115,7 @@ const Auth = () => {
                     <CardDescription className="text-base">Sign in to share and discover developer content</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {/* 
-                    
 
-if user is registering show register form else show login form
-    const [isRegistering, setIsRegistering] = useState(true);
-
- */}
 
                     <Tabs defaultValue="login" className="w-full">
                         <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -130,16 +134,32 @@ if user is registering show register form else show login form
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="login-password">Password</Label>
-                                <Input
-                                    id="login-password"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                            </div>
+                            <div className="space-y-2 relative">
+      <Label htmlFor="login-password">Password</Label>
+
+      <div className="relative">
+        <Input
+          id="login-password"
+          type={showPassword ? "text" : "password"}
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="pr-10" 
+        />
+
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+        >
+          {showPassword ? (
+            <EyeOff className="h-5 w-5" />
+          ) : (
+            <Eye className="h-5 w-5" />
+          )}
+        </button>
+      </div>
+    </div>
 
 
                             {error && (
