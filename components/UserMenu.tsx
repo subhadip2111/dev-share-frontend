@@ -26,6 +26,7 @@ const UserMenu = ({ user }: any) => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
     toast({
       title: "Logged out",
       description: "You have been successfully logged out",

@@ -46,11 +46,11 @@ const Auth = () => {
                 const loginData = await loginApi({ email, password });
                 setSuccessMessage("Login successful!");
                 console.log("loginData:", loginData);
-                localStorage.setItem("accessToken", loginData.tokens.accessToken);
+                localStorage.setItem("accessToken", loginData.accessToken);
                 const userData = {
                     user: loginData.user,
-                    accessToken: loginData.tokens.accessToken,
-                    refreshToken: loginData.tokens.refreshToken,
+                    accessToken: loginData.accessToken,
+                    refreshToken: loginData.refreshToken,
                     avatar: avatar,
                 }
                 localStorage.setItem("user", JSON.stringify(userData));

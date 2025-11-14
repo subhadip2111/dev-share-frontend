@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { FileText, MessageSquare, Lightbulb, BookOpen, X } from "lucide-react";
 import RichTextEditor from "@/components/RichTextEditor";
 import Link from "next/link";
+import { createPost } from "@/utils/post";
+import { useRouter } from "next/navigation";
 
 const postTypes = [
   { id: "interview", label: "Interview Experience", icon: MessageSquare, description: "Share questions from your interviews" },
@@ -26,13 +28,15 @@ const categories = [
 ];
 
 const CreatePost = () => {
+  const router = useRouter();
   const [selectedType, setSelectedType] = useState("article");
+  const [postStatus,setPostStatus]=useState("published");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-
+  const [excerpt, setExcerpt] = useState("");
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
@@ -43,18 +47,75 @@ const CreatePost = () => {
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit =async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!title || !category || !content) {
+    if (!title || !category || !content || !excerpt) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    toast.success("Post published successfully!");
-    // In real app, submit to backend
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const token = localStorage.getItem("accessToken");
+    console.log(currentUser)
+    let postData={
+      type: selectedType,
+      title,
+      category,
+      content,
+      tags,
+      token,
+      excerpt
+    }
+    console.log("Post Data:", postData);
+try {
+    const result = await createPost(postData);
+    if (result?.data) {
+      toast.success("Post published successfully!");
+      router.push("/explore"); 
+    } else {
+      toast.error("Failed to publish post.");
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("Something went wrong!");
+  }
+
+
   };
+  const savePostAsDraft =async  (e: React.FormEvent) => {
+    setPostStatus("draft");
+     e.preventDefault();
+    if (!title || !category || !content || !excerpt) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const token = localStorage.getItem("accessToken");
+    console.log(currentUser)
+    let postData={
+      type: selectedType,
+      title,
+      category,
+      content,
+      tags,
+      token,
+      status:postStatus,
+      excerpt
+    }
+try {
+    const result = await createPost(postData);
+    if (result?.data) {
+      toast.success("saved as Draft successfully!");
+      router.push("/explore"); 
+    } else {
+      toast.error("Failed to draft post.");
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("Something went wrong!");
+  }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -120,6 +181,16 @@ const CreatePost = () => {
                   placeholder="Enter a descriptive title..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
+              </div>
+                  <div className="space-y-2">
+                <Label htmlFor="excerpt">  excerpt *</Label>
+                <Input
+                  id="excerpt"
+                  placeholder="Enter a descriptive excerpt..."
+                  value={excerpt}
+                  onChange={(e) => setExcerpt(e.target.value)}
                   required
                 />
               </div>
@@ -191,15 +262,14 @@ const CreatePost = () => {
 
           {/* Actions */}
           <div className="flex gap-4 justify-end">
-            <Button type="button" variant="outline">
-              Save Draft
-            </Button>
-           <Link href="/explore">
-           
-            <Button type="submit">
-              Publish Post
-            </Button></Link>
-          </div>
+  <Button type="button" variant="outline" onClick={savePostAsDraft}>
+    Save Draft
+  </Button>
+  <Button type="submit">
+    Publish Post
+  </Button>
+</div>
+
         </form>
       </div>
     </div>

@@ -56,7 +56,6 @@ const featuredPosts = [
 ];
 
 const Home = () => {
-  // checked if user had any saved session in the browser
   const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem("accessToken"));
 
 

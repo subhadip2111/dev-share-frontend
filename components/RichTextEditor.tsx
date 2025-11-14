@@ -32,7 +32,9 @@ const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const imageUrl = event.target?.result as string;
+      console.log("Image URL:", imageUrl);  
       const markdownImage = `\n![${file.name}](${imageUrl})\n`;
+       console.log("Markdown Image Syntax:", markdownImage);
       onChange(value + markdownImage);
       toast.success("Image uploaded successfully");
     };
