@@ -166,7 +166,7 @@ console.log("featuredPosts",featuredPosts)
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredPosts.map((post) => (
+            {featuredPosts.map((post:any) => (
               <Link key={post._id} href={`/post/${post._id}`}>
                 <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
                   <CardHeader>
@@ -187,7 +187,7 @@ console.log("featuredPosts",featuredPosts)
                     </p>
 
                     <div className="flex flex-wrap gap-2">
-                      {post.tags.map((tag) => (
+                      {post.tags?.map((tag:any) => (
                         <Badge key={tag} variant="secondary" className="text-xs">
                           {tag}
                         </Badge>

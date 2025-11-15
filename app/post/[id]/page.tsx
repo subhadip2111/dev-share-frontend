@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
- import { Separator } from "@/components/ui/separator";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Heart, MessageSquare, Share2, Bookmark, Clock, Calendar } from "lucide-react";
 import Link from "next/link";
@@ -15,38 +15,60 @@ import { useEffect, useState } from "react";
 import { getPostDetailsById } from "@/utils/post";
 import { toast } from "sonner";
 
+// Define the Post type
+interface Author {
+  name: string;
+  role: string;
+}
+
+interface Post {
+  _id: string;
+  title: string;
+  content: string;
+  excerpt?: string;
+  author: Author;
+  category: string;
+  readTime: number | string;
+  likes: number;
+  comments: number;
+  createdAt: string;
+  tags: string[];
+}
+
 const PostDetail = () => {
-  const { id } = useParams();
-const [post, setPost] = useState(null);
-  const getdeatilsById = async (id:any) => {
-   try {
-    const token = localStorage.getItem("accessToken");
-    const data = await getPostDetailsById(token,id);
-    console.log("post details by id",data)
-    setPost(data);
-   } catch (error) {
-    toast.error("something went wrong" );
-   }
-  }
-useEffect(() => {
+  const params = useParams();
+  const id = params?.id;
+  const [post, setPost] = useState<Post | null>(null);
+
+  const getdeatilsById = async (postId: any | string[]) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const data = await getPostDetailsById(token, postId);
+      console.log("post details by id", data);
+      setPost(data);
+    } catch (error) {
+      toast.error("something went wrong");
+    }
+  };
+
+  useEffect(() => {
     if (id) {
       getdeatilsById(id);
     }
   }, [id]);
 
-
-const relatedPosts = [
+  const relatedPosts = [
     { id: 2, title: "Advanced React Patterns You Should Know", category: "Frontend" },
     { id: 3, title: "JavaScript Interview Questions - Complete Guide", category: "Frontend" },
     { id: 4, title: "My Google Interview Experience - Full Journey", category: "Interview" }
   ];
-  const formatReadTime = (time:any) => `${Math.ceil(Number(time)/60)||0} min read`;
 
+  const formatReadTime = (time: number | string) => `${Math.ceil(Number(time) / 60) || 0} min read`;
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
+
       <div className="container mx-auto px-4 py-8">
         <Link href="/explore">
           <Button variant="ghost" className="mb-6 gap-2">
@@ -65,12 +87,11 @@ const relatedPosts = [
                   <Badge variant="outline">{post?.category}</Badge>
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-{formatReadTime(post?.readTime)}
-
+                    {post?.readTime && formatReadTime(post.readTime)}
                   </span>
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-{new Date(post?.createdAt).toLocaleDateString()}
+                    {post?.createdAt && new Date(post.createdAt).toLocaleDateString()}
                   </span>
                 </div>
 
@@ -87,7 +108,7 @@ const relatedPosts = [
                     </Avatar>
                     <div>
                       <p className="font-semibold">{post?.author?.name}</p>
-                      <p className="text-sm text-muted-foreground">{post?.author.role}</p>
+                      <p className="text-sm text-muted-foreground">{post?.author?.role}</p>
                     </div>
                   </div>
 
@@ -141,10 +162,10 @@ const relatedPosts = [
             <Card>
               <CardContent className="pt-6 space-y-6">
                 <h3 className="text-2xl font-bold">Comments ({post?.comments})</h3>
-                
+
                 <div className="space-y-4">
-                  <Textarea 
-                    placeholder="Share your thoughts..." 
+                  <Textarea
+                    placeholder="Share your thoughts..."
                     className="min-h-[100px]"
                   />
                   <Button>Post Comment</Button>
@@ -165,7 +186,7 @@ const relatedPosts = [
                           <span className="text-xs text-muted-foreground">2 hours ago</span>
                         </div>
                         <p className="mt-1 text-sm">
-                          Great article! The custom hook example was particularly helpful. 
+                          Great article! The custom hook example was particularly helpful.
                           I've been struggling with this pattern.
                         </p>
                         <div className="flex gap-4 mt-2">

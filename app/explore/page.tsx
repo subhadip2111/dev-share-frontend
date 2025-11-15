@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
@@ -17,126 +16,89 @@ const categories = [
     "All", "Frontend", "Backend", "Fullstack", "AI & ML", "DevOps", "Mobile", "Database", "Security"
 ];
 
-// const allPosts = [
-//     {
-//         id: 1,
-//         title: "React Hooks Interview Questions Asked at Google",
-//         excerpt: "A comprehensive list of React Hooks questions from my recent Google interview experience, including useEffect, useState, and custom hooks...",
-//         author: "Sarah Chen",
-//         category: "Frontend",
-//         readTime: "8 min",
-//         likes: 234,
-//         comments: 45,
-//         date: "2 days ago",
-//         tags: ["React", "Interview", "Google"]
-//     },
-//     {
-//         id: 2,
-//         title: "Building Scalable Microservices with Node.js",
-//         excerpt: "Learn how to design and implement microservices architecture that scales to millions of users. Covers Docker, Kubernetes, and message queues...",
-//         author: "Mike Johnson",
-//         category: "Backend",
-//         readTime: "12 min",
-//         likes: 456,
-//         comments: 89,
-//         date: "1 day ago",
-//         tags: ["Node.js", "Microservices", "Architecture"]
-//     },
-//     {
-//         id: 3,
-//         title: "Complete Machine Learning Interview Prep Guide",
-//         excerpt: "From zero to ML engineer: resources, projects, and lessons learned. Includes Python libraries, algorithms, and real interview questions...",
-//         author: "Priya Sharma",
-//         category: "AI & ML",
-//         readTime: "15 min",
-//         likes: 789,
-//         comments: 123,
-//         date: "3 days ago",
-//         tags: ["Machine Learning", "Career", "Guide"]
-//     },
-//     {
-//         id: 4,
-//         title: "System Design: URL Shortener Like bit.ly",
-//         excerpt: "Deep dive into designing a URL shortening service. Covers database schema, API design, caching strategies, and scaling considerations...",
-//         author: "Alex Kumar",
-//         category: "Fullstack",
-//         readTime: "20 min",
-//         likes: 567,
-//         comments: 78,
-//         date: "4 days ago",
-//         tags: ["System Design", "Architecture", "Interview"]
-//     },
-//     {
-//         id: 5,
-//         title: "TypeScript Best Practices for Large Projects",
-//         excerpt: "Essential TypeScript patterns and practices I learned while working on enterprise applications. Improve type safety and developer experience...",
-//         author: "Emma Davis",
-//         category: "Frontend",
-//         readTime: "10 min",
-//         likes: 345,
-//         comments: 56,
-//         date: "5 days ago",
-//         tags: ["TypeScript", "Best Practices", "Enterprise"]
-//     },
-//     {
-//         id: 6,
-//         title: "AWS Solutions Architect Interview Experience",
-//         excerpt: "Detailed breakdown of my AWS certification and interview process at Amazon. Includes resources, tips, and actual questions asked...",
-//         author: "David Park",
-//         category: "DevOps",
-//         readTime: "14 min",
-//         likes: 432,
-//         comments: 67,
-//         date: "1 week ago",
-//         tags: ["AWS", "Interview", "Cloud"]
-//     }
-// ];
+// Define the Post type
+interface Post {
+    _id: string;
+    title: string;
+    excerpt: string;
+    author?: string;
+    category: string;
+    readTime: string;
+    likes: number;
+    comments: number;
+    date: string;
+    tags: string[];
+}
 
 const Explore = () => {
     const router = useRouter();
-const [allPosts,setAllPosts]=useState();
+
+    const [allPosts, setAllPosts] = useState<Post[]>([]);
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("recent");
-    const token = localStorage.getItem("accessToken");
+    const [token, setToken] = useState<string | null>(null);
 
-    const filteredPosts = allPosts?
-        .filter(post => {
-            const matchesCategory = selectedCategory === "All" || post.category === selectedCategory;
-            const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-            return matchesCategory && matchesSearch;
-        })
-        .sort((a, b) => {
-            switch (sortBy) {
-                case "popular":
-                    return b.likes - a.likes;
-                case "commented":
-                    return b.comments - a.comments;
-                case "recent":
-                default:
-                    return 0;
-            }
-        });
+    // Fix localStorage in Next.js
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            setToken(localStorage.getItem("accessToken"));
+        }
+    }, []);
+
+    const filteredPosts =
+        allPosts
+            ?.filter((post) => {
+                const title = post?.title?.toLowerCase() || "";
+                const excerpt = post?.excerpt?.toLowerCase() || "";
+                const tags = Array.isArray(post?.tags) ? post.tags : [];
+
+                const matchesCategory =
+                    selectedCategory === "All" ||
+                    post?.category === selectedCategory;
+
+                const matchesSearch =
+                    title.includes(searchQuery.toLowerCase()) ||
+                    excerpt.includes(searchQuery.toLowerCase()) ||
+                    tags.some((tag) =>
+                        tag?.toLowerCase().includes(searchQuery.toLowerCase())
+                    );
+
+                return matchesCategory && matchesSearch;
+            })
+            ?.sort((a, b) => {
+                switch (sortBy) {
+                    case "popular":
+                        return (b?.likes || 0) - (a?.likes || 0);
+                    case "commented":
+                        return (b?.comments || 0) - (a?.comments || 0);
+                    case "recent":
+                    default:
+                        return 0;
+                }
+            }) || [];
+
 
     const handleAddNewPost = () => {
         router.push("/create");
     };
-    const fetchPosts=async()=>{
+
+    const fetchPosts = async () => {
         try {
-            const postData=await getPostByquery(token)
-            console.log("postData",postData)
+            const postData = await getPostByquery(token);
+            console.log("postData", postData);
             setAllPosts(postData.data);
         } catch (error) {
-           
             toast.error("Failed to fetch posts.");
         }
-    }
-    console.log("allPosts",allPosts)
-useEffect(()=>{
-    fetchPosts();
-},[])
+    };
+
+    console.log("allPosts", allPosts);
+
+    useEffect(() => {
+        fetchPosts();
+    }, []);
+
     return (
         <div className="min-h-screen bg-background">
             <Navigation />
@@ -233,7 +195,7 @@ useEffect(()=>{
 
                 {/* Posts Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredPosts?.map((post:any) => (
+                    {filteredPosts?.map((post) => (
                         <Link key={post._id} href={`/post/${post._id}`}>
                             <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
                                 <CardHeader>
@@ -289,4 +251,3 @@ useEffect(()=>{
 };
 
 export default Explore;
-
