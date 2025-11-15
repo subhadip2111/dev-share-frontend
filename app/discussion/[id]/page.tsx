@@ -56,7 +56,7 @@ Any tips or resources would be greatly appreciated!`,
     }
   };
 
-  const handleReplyLike = (replyId) => {
+  const handleReplyLike = (replyId:any) => {
     setReplies(replies.map(reply => {
       if (reply.id === replyId) {
         return {
