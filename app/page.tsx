@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Code, Database, Brain, Layers, MessageSquare, Lightbulb, TrendingUp, Clock } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getPostByquery } from "@/utils/post";
 
 const categories = [
   { id: "frontend", name: "Frontend", icon: Code, count: 234, color: "bg-blue-50 text-blue-700 border-blue-200" },
@@ -58,7 +59,16 @@ const featuredPosts = [
 const Home = () => {
   const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem("accessToken"));
 
-
+const [featuredPosts,setFeaturedPosts]=useState([]);
+const getFeaturedPosts=async()=>{
+  //fetch featured posts from backend
+  const response=await getPostByquery(accessToken)
+  setFeaturedPosts(response.data);
+}
+useEffect(()=>{
+  getFeaturedPosts();
+},[]);
+console.log("featuredPosts",featuredPosts)
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -157,14 +167,14 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredPosts.map((post) => (
-              <Link key={post.id} href={`/post/${post.id}`}>
+              <Link key={post._id} href={`/post/${post._id}`}>
                 <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
                   <CardHeader>
                     <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="outline">{post.category}</Badge>
+                      <Badge variant="outline">{post?.category}</Badge>
                       <span className="text-sm text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {post.readTime}
+                        {Math.floor(post?.readTime/60)} min read
                       </span>
                     </div>
                     <CardTitle className="text-xl leading-tight hover:text-primary transition-colors">
@@ -192,7 +202,11 @@ const Home = () => {
                         </span>
                         <span>❤️ {post.likes}</span>
                       </div>
-                      <span className="text-sm text-muted-foreground">{post.date}</span>
+                      <span className="text-sm text-muted-foreground"> {new Date(post.createdAt).toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })}</span>
                     </div>
                   </CardContent>
                 </Card>
